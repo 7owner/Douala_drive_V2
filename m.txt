@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tableau de Bord — Douala Drive</title>
+  <meta name="description" content="Tableau de bord administratif pour Douala Drive.">
+  <link rel="icon" href="../assets/logo.jpg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .loading-placeholder { background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+    @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .table-header { background-color: #1e293b; }
+    .table-row:nth-child(even) { background-color: #1a2230; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+
+<header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/50">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="../index.html" class="text-xl font-bold tracking-tight">Douala<span class="text-amber-400">Drive</span></a>
+    <nav class="hidden md:flex items-center gap-6 text-sm">
+      <a href="../index.html#fleet" class="hover:text-amber-300 transition-colors">Flotte</a>
+      <a href="booking.html" class="hover:text-amber-300 transition-colors">Réserver</a>
+      <a href="#" class="hover:text-amber-300 transition-colors">À propos</a>
+      <a href="#" class="hover:text-amber-300 transition-colors">Contact</a>
+      <a href="dashboard.html" class="text-amber-400 font-semibold transition-colors">Dashboard</a>
+    </nav>
+    <a href="dashboard.html" class="md:hidden inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-400 text-slate-900 font-semibold">Dashboard</a>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-12">
+  <div data-aos="fade-up">
+    <h1 class="text-4xl font-bold text-center">Tableau de Bord Administratif</h1>
+    <p class="text-slate-400 text-center mt-2">Gérez vos véhicules, réservations et consultez les statistiques.</p>
+  </div>
+
+  <!-- Overview Stats -->
+  <section class="mt-12 grid md:grid-cols-3 gap-8">
+    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800" data-aos="fade-up" data-aos-delay="100">
+      <h2 class="text-xl font-semibold text-amber-400">Total Véhicules</h2>
+      <p id="total-cars" class="text-4xl font-bold mt-2">...</p>
+    </div>
+    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800" data-aos="fade-up" data-aos-delay="200">
+      <h2 class="text-xl font-semibold text-amber-400">Total Réservations</h2>
+      <p id="total-bookings" class="text-4xl font-bold mt-2">...</p>
+    </div>
+    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800" data-aos="fade-up" data-aos-delay="300">
+      <h2 class="text-xl font-semibold text-amber-400">Plus Sollicités</h2>
+      <ul id="most-requested-cars" class="mt-2 space-y-1 text-lg">
+        <li>...</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Charts Section -->
+  <section class="mt-12 grid md:grid-cols-2 gap-8">
+    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800" data-aos="fade-up" data-aos-delay="400">
+      <h2 class="text-xl font-semibold text-amber-400 mb-4">Réservations par Mois</h2>
+      <canvas id="bookingsPerMonthChart"></canvas>
+    </div>
+    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800" data-aos="fade-up" data-aos-delay="500">
+      <h2 class="text-xl font-semibold text-amber-400 mb-4">Popularité des Véhicules</h2>
+      <canvas id="carPopularityChart"></canvas>
+    </div>
+  </section>
+
+  <!-- Cars Management -->
+  <section class="mt-12" data-aos="fade-up" data-aos-delay="600">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-3xl font-bold">Gestion des Véhicules</h2>
+      <button id="add-car-btn" class="px-4 py-2 rounded-xl bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300 transition-colors">Ajouter une voiture</button>
+    </div>
+    <div class="overflow-x-auto bg-slate-900/50 rounded-2xl border border-slate-800">
+      <table class="min-w-full text-sm text-left text-slate-300">
+        <thead class="text-xs uppercase table-header">
+          <tr>
+            <th scope="col" class="px-6 py-3">ID</th>
+            <th scope="col" class="px-6 py-3">Nom</th>
+            <th scope="col" class="px-6 py-3">Catégorie</th>
+            <th scope="col" class="px-6 py-3">Prix</th>
+            <th scope="col" class="px-6 py-3">Quantité</th>
+            <th scope="col" class="px-6 py-3">Tags</th>
+            <th scope="col" class="px-6 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cars-table-body">
+          <tr><td colspan="7" class="px-6 py-4 text-center">Chargement des véhicules...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Bookings Management -->
+  <section class="mt-12" data-aos="fade-up" data-aos-delay="500">
+    <h2 class="text-3xl font-bold mb-6">Gestion des Réservations</h2>
+    <div class="overflow-x-auto bg-slate-900/50 rounded-2xl border border-slate-800">
+      <table class="min-w-full text-sm text-left text-slate-300">
+        <thead class="text-xs uppercase table-header">
+          <tr>
+            <th scope="col" class="px-6 py-3">ID</th>
+            <th scope="col" class="px-6 py-3">Véhicule</th>
+            <th scope="col" class="px-6 py-3">Début</th>
+            <th scope="col" class="px-6 py-3">Fin</th>
+            <th scope="col" class="px-6 py-3">Client</th>
+            <th scope="col" class="px-6 py-3">Email</th>
+            <th scope="col" class="px-6 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="bookings-table-body">
+          <tr><td colspan="7" class="px-6 py-4 text-center">Chargement des réservations...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <!-- Car CRUD Modal -->
+  <div id="car-crud-modal" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto relative">
+      <button id="close-car-crud-modal" class="absolute top-4 right-4 text-white bg-slate-800/50 hover:bg-slate-700/80 rounded-full p-2 z-20">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <h2 id="car-crud-modal-title" class="text-2xl font-bold p-6 border-b border-slate-800">Ajouter/Modifier une voiture</h2>
+      <form id="car-crud-form" class="grid gap-4 p-6">
+        <label class="grid gap-1.5"><span class="font-semibold">Nom</span><input type="text" name="name" required class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <label class="grid gap-1.5"><span class="font-semibold">Catégorie</span><input type="text" name="category" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <label class="grid gap-1.5"><span class="font-semibold">Prix</span><input type="text" name="price" required class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <label class="grid gap-1.5"><span class="font-semibold">Image principale (chemin)</span><input type="text" name="image" required class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <label class="grid gap-1.5"><span class="font-semibold">Caractéristiques (JSON array, ex: "feat1, feat2")</span><input type="text" name="features" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <label class="grid gap-1.5"><span class="font-semibold">Images de détail (JSON array, ex: "img1, img2")</span><input type="text" name="details" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <label class="grid gap-1.5"><span class="font-semibold">Quantité</span><input type="number" name="quantity" required min="0" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <label class="grid gap-1.5"><span class="font-semibold">Tags (JSON array, ex: "SUV, Famille")</span><input type="text" name="tags" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"></label>
+        <div class="flex justify-end mt-4">
+          <button type="submit" class="px-6 py-2 rounded-xl bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300 transition-colors">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="mt-20 border-t border-slate-800/60 bg-slate-950/80">
+    <div class="max-w-7xl mx-auto px-4 py-12 text-center text-sm text-slate-500">
+        © 2025 Douala Drive. Tous droits réservés.
+    </div>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init({ duration: 700, once: true });
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    const totalCarsElement = document.getElementById('total-cars');
+    const totalBookingsElement = document.getElementById('total-bookings');
+    const mostRequestedCarsElement = document.getElementById('most-requested-cars');
+    const carsTableBody = document.getElementById('cars-table-body');
+    const bookingsTableBody = document.getElementById('bookings-table-body');
+    const addCarBtn = document.getElementById('add-car-btn');
+    const carCrudModal = document.getElementById('car-crud-modal');
+    const carCrudModalTitle = document.getElementById('car-crud-modal-title');
+    const carCrudForm = document.getElementById('car-crud-form');
+    const closeCarCrudModalBtn = document.getElementById('close-car-crud-modal');
+    let editingCarId = null; // To store the ID of the car being edited
+
+    // --- Utility Functions ---
+    function showMessage(message, type = 'success') {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        msgDiv.textContent = message;
+        document.body.appendChild(msgDiv);
+        setTimeout(() => msgDiv.remove(), 3000);
+    }
+
+    // --- Fetch Data & Render ---
+    async function fetchData() {
+      try {
+        // Fetch Overview Stats
+        const overviewResponse = await fetch('/api/admin/stats/overview');
+        const overview = await overviewResponse.json();
+        totalCarsElement.textContent = overview.totalCars;
+        totalBookingsElement.textContent = overview.totalBookings;
+
+        // Fetch Most Requested Cars
+        const mostRequestedResponse = await fetch('/api/admin/stats/most-requested-cars');
+        const mostRequested = await mostRequestedResponse.json();
+        mostRequestedCarsElement.innerHTML = mostRequested.map(item => `<li>${item.car_name} (${item.booking_count} réservations)</li>`).join('');
+
+        // Fetch Cars
+        const carsResponse = await fetch('/api/admin/cars');
+        const cars = await carsResponse.json();
+        carsTableBody.innerHTML = cars.map(car => `
+          <tr class="table-row">
+            <td class="px-6 py-4">${car.id}</td>
+            <td class="px-6 py-4">${car.name}</td>
+            <td class="px-6 py-4">${car.category}</td>
+            <td class="px-6 py-4">${car.price}</td>
+            <td class="px-6 py-4">${car.quantity}</td>
+            <td class="px-6 py-4">${car.tags ? car.tags.join(', ') : '-'}</td>
+            <td class="px-6 py-4">
+              <button class="text-amber-400 hover:underline edit-car-btn" data-id="${car.id}">Modifier</button>
+              <button class="text-red-500 hover:underline ml-2 delete-car-btn" data-id="${car.id}">Supprimer</button>
+            </td>
+          </tr>
+        `).join('');
+
+        // Fetch Bookings
+        const bookingsResponse = await fetch('/api/admin/bookings');
+        const bookings = await bookingsResponse.json();
+        bookingsTableBody.innerHTML = bookings.map(booking => `
+          <tr class="table-row">
+            <td class="px-6 py-4">${booking.id}</td>
+            <td class="px-6 py-4">${booking.car_name}</td>
+            <td class="px-6 py-4">${new Date(booking.start_date).toLocaleDateString()}</td>
+            <td class="px-6 py-4">${new Date(booking.end_date).toLocaleDateString()}</td>
+            <td class="px-6 py-4">${booking.customer_name}</td>
+            <td class="px-6 py-4">${booking.customer_email}</td>
+            <td class="px-6 py-4">
+              <button class="text-red-500 hover:underline cancel-booking-btn" data-id="${booking.id}">Annuler</button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (error) {
+        console.error('Erreur lors du chargement du tableau de bord:', error);
+        showMessage('Erreur lors du chargement des données du tableau de bord.', 'error');
+        totalCarsElement.textContent = 'Erreur';
+        totalBookingsElement.textContent = 'Erreur';
+        mostRequestedCarsElement.innerHTML = '<li>Erreur de chargement</li>';
+        carsTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-400">Erreur de chargement des véhicules.</td></tr>';
+        bookingsTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-400">Erreur de chargement des réservations.</td></tr>';
+      }
+    }
+
+    // --- Car CRUD Modal Logic ---
+    addCarBtn.addEventListener('click', () => {
+        carCrudModalTitle.textContent = 'Ajouter une nouvelle voiture';
+        carCrudForm.reset();
+        editingCarId = null;
+        carCrudModal.classList.remove('hidden');
+    });
+
+    closeCarCrudModalBtn.addEventListener('click', () => {
+        carCrudModal.classList.add('hidden');
+    });
+
+    carCrudModal.addEventListener('click', (e) => {
+        if (e.target === carCrudModal) carCrudModal.classList.add('hidden');
+    });
+
+    carCrudForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(carCrudForm);
+        const carData = Object.fromEntries(formData.entries());
+        
+        // Parse JSON fields
+        carData.features = carData.features.split(',').map(s => s.trim()).filter(s => s);
+        carData.details = carData.details.split(',').map(s => s.trim()).filter(s => s);
+        carData.tags = carData.tags.split(',').map(s => s.trim()).filter(s => s);
+        carData.quantity = parseInt(carData.quantity, 10);
+
+        const method = editingCarId ? 'PUT' : 'POST';
+        const url = editingCarId ? `/api/admin/cars/${editingCarId}` : '/api/admin/cars';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(carData)
+            });
+            const result = await response.json();
+            if (result.success) {
+                showMessage(result.message, 'success');
+                carCrudModal.classList.add('hidden');
+                fetchData(); // Refresh data
+            } else {
+                showMessage(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error submitting car form:', error);
+            showMessage('Erreur de communication avec le serveur.', 'error');
+        }
+    });
+
+    // --- Event Delegation for Car Table Actions ---
+    carsTableBody.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('edit-car-btn')) {
+            const carId = e.target.dataset.id;
+            try {
+                const response = await fetch(`/api/admin/cars`); // Fetch all cars to find the one to edit
+                const cars = await response.json();
+                const carToEdit = cars.find(c => c.id == carId); // Use == for type coercion
+                if (carToEdit) {
+                    carCrudModalTitle.textContent = 'Modifier la voiture';
+                    editingCarId = carId;
+                    // Populate form
+                    carCrudForm.elements['name'].value = carToEdit.name;
+                    carCrudForm.elements['category'].value = carToEdit.category;
+                    carCrudForm.elements['price'].value = carToEdit.price;
+                    carCrudForm.elements['image'].value = carToEdit.image;
+                    carCrudForm.elements['features'].value = carToEdit.features.join(', ');
+                    carCrudForm.elements['details'].value = carToEdit.details.join(', ');
+                    carCrudForm.elements['quantity'].value = carToEdit.quantity;
+                    carCrudForm.elements['tags'].value = carToEdit.tags.join(', ');
+                    carCrudModal.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error fetching car for edit:', error);
+                showMessage('Erreur lors de la récupération des données de la voiture.', 'error');
+            }
+        } else if (e.target.classList.contains('delete-car-btn')) {
+            const carId = e.target.dataset.id;
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette voiture ?')) {
+                try {
+                    const response = await fetch(`/api/admin/cars/${carId}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    if (result.success) {
+                        showMessage(result.message, 'success');
+                        fetchData(); // Refresh data
+                    } else {
+                        showMessage(result.message, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting car:', error);
+                    showMessage('Erreur de communication avec le serveur.', 'error');
+                }
+            }
+        }
+    });
+
+    // --- Event Delegation for Booking Table Actions ---
+    bookingsTableBody.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('cancel-booking-btn')) {
+            const bookingId = e.target.dataset.id;
+            if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+                try {
+                    const response = await fetch(`/api/admin/bookings/${bookingId}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    if (result.success) {
+                        showMessage(result.message, 'success');
+                        fetchData(); // Refresh data
+                    } else {
+                        showMessage(result.message, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error canceling booking:', error);
+                    showMessage('Erreur de communication avec le serveur.', 'error');
+                }
+            }
+        }
+    });
+
+    fetchData(); // Initial data load
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commentaires — Douala Drive</title>
+  <link rel="icon" href="../assets/logo.jpg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .comment-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.3) 0%, rgba(51, 65, 85, 0.1) 100%);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+
+<header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/50">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="../index.html" class="text-xl font-bold tracking-tight">Douala<span class="text-amber-400">Drive</span></a>
+    <nav class="hidden md:flex items-center gap-6 text-sm">
+      <a href="../index.html#fleet" class="hover:text-amber-300 transition-colors">Flotte</a>
+      <a href="booking.html" id="booking-link" class="hover:text-amber-300 transition-colors">Réserver</a>
+    </nav>
+    <a href="../index.html" class="px-4 py-2 rounded-xl bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300 transition-colors">Retour à l'accueil</a>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 py-12">
+  <!-- Car Details Section -->
+  <section id="car-details-section" class="hidden">
+    <div class="grid md:grid-cols-2 gap-8 items-center">
+      <img id="car-image" src="" alt="" class="w-full h-auto rounded-2xl shadow-lg">
+      <div>
+        <h1 id="car-name" class="text-4xl font-bold"></h1>
+        <p id="car-category" class="text-amber-400 text-lg mt-1"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comments Section -->
+  <section class="mt-12">
+    <h2 class="text-3xl font-bold mb-8">Avis des clients</h2>
+    <div id="comments-list" class="space-y-6">
+      <!-- Comments will be injected here -->
+      <p id="loading-message">Chargement des commentaires...</p>
+    </div>
+  </section>
+</main>
+
+<footer class="mt-20 border-t border-slate-800/60 bg-slate-950/80">
+    <div class="max-w-7xl mx-auto px-4 py-12 text-center text-sm text-slate-500">
+        © 2025 Douala Drive. Tous droits réservés.
+    </div>
+</footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    const carDetailsSection = document.getElementById('car-details-section');
+    const carImage = document.getElementById('car-image');
+    const carName = document.getElementById('car-name');
+    const carCategory = document.getElementById('car-category');
+    const commentsList = document.getElementById('comments-list');
+    const loadingMessage = document.getElementById('loading-message');
+
+    function generateStars(rating) {
+        let stars = '';
+        for (let i = 0; i < 5; i++) { stars += i < rating ? '★' : '☆'; }
+        return `<div class="text-amber-400 text-lg">${stars}</div>`;
+    }
+
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const carId = params.get('car_id');
+
+        if (!carId) {
+            loadingMessage.textContent = 'Erreur : Aucun ID de voiture fourni.';
+            loadingMessage.classList.add('text-red-400');
+            return;
+        }
+
+        const response = await fetch(`/api/comments?car_id=${carId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+
+        // Render car details
+        const { car, comments } = data;
+        carImage.src = `../${car.image}`;
+        carImage.alt = car.name;
+        carName.textContent = car.name;
+        carCategory.textContent = car.category;
+        document.getElementById('booking-link').href = `booking.html?model_id=${car.id}`;
+        carDetailsSection.classList.remove('hidden');
+
+        // Render comments
+        loadingMessage.remove();
+        if (comments.length > 0) {
+            comments.forEach(comment => {
+                const commentCard = document.createElement('div');
+                commentCard.className = 'comment-card p-6 rounded-2xl';
+                commentCard.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-lg text-slate-200">${comment.author}</h3>
+                        ${generateStars(comment.rating)}
+                    </div>
+                    <p class="text-slate-300">${comment.comment_text}</p>
+                    <p class="text-xs text-slate-500 mt-3">${new Date(comment.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                `;
+                commentsList.appendChild(commentCard);
+            });
+        } else {
+            const noComments = document.createElement('p');
+            noComments.textContent = 'Aucun commentaire pour ce véhicule pour le moment.';
+            commentsList.appendChild(noComments);
+        }
+
+    } catch (error) {
+        console.error('Failed to load comments:', error);
+        loadingMessage.textContent = `Erreur lors du chargement des commentaires. (${error.message})`;
+        loadingMessage.classList.add('text-red-400');
+    }
+  });
+</script>
+
+</body>
+</html>

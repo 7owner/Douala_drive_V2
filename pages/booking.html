@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Réserver — Douala Drive</title>
+  <link rel="icon" href="../assets/logo.jpg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <style>
+    .form-feedback { display: none; font-weight: 600; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 1rem; }
+    .form-feedback.success { display: block; background-color: rgba(52, 211, 153, 0.1); border: 1px solid rgb(52, 211, 153); color: rgb(52, 211, 153); }
+    .form-feedback.error { display: block; background-color: rgba(248, 113, 113, 0.1); border: 1px solid rgb(248, 113, 113); color: rgb(248, 113, 113); }
+    .car-selector-card { cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; }
+    .car-selector-card.selected { border-color: #fbbf24; transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.2), 0 4px 6px -2px rgba(251, 191, 36, 0.1); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+
+<header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/50">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="../index.html" class="text-xl font-bold tracking-tight">Douala<span class="text-amber-400">Drive</span></a>
+    <nav class="hidden md:flex items-center gap-6 text-sm">
+      <a href="../index.html#fleet" class="hover:text-amber-300 transition-colors">Flotte</a>
+      <a href="#" class="text-amber-400 font-semibold transition-colors">Réserver</a>
+    </nav>
+    <a href="booking.html" class="md:hidden inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-400 text-slate-900 font-semibold">Réserver</a>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-12">
+  <div data-aos="fade-up">
+    <h1 class="text-4xl font-bold text-center">Réserver votre véhicule</h1>
+    <p class="text-slate-400 text-center mt-2">Choisissez un modèle et remplissez le formulaire pour commencer.</p>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-12 mt-12">
+    
+    <div data-aos="fade-right" data-aos-delay="100">
+      <h2 class="text-2xl font-bold mb-4">1. Choisissez un modèle</h2>
+      <div id="car-selection-grid" class="grid grid-cols-2 gap-4 max-h-[600px] overflow-y-auto p-2">
+        <!-- Les voitures seront injectées ici -->
+      </div>
+    </div>
+
+    <div data-aos="fade-left" data-aos-delay="200">
+      <h2 class="text-2xl font-bold mb-4">2. Remplissez vos informations</h2>
+      <div class="sticky top-28">
+        <form id="bookingForm" class="grid gap-4 bg-slate-900/50 p-8 rounded-2xl border border-slate-800">
+          <input type="hidden" name="car_id" id="selectedCarId">
+          
+          <!-- Selected Car Preview -->
+          <div id="car-preview-placeholder" class="flex items-center justify-center w-full h-24 bg-slate-900 rounded-lg text-slate-500">
+            Veuillez choisir un modèle
+          </div>
+          <div id="car-preview" class="hidden flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
+            <img id="car-image" src="" alt="" class="w-24 h-16 object-cover rounded-md">
+            <div>
+              <h3 id="car-name" class="text-xl font-bold"></h3>
+              <p id="car-price" class="text-lg text-amber-400 font-semibold"></p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+              <label class="grid gap-1.5"><span class="font-semibold">Date de prise</span><input required type="datetime-local" name="start_date" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"/></label>
+              <label class="grid gap-1.5"><span class="font-semibold">Date de retour</span><input required type="datetime-local" name="end_date" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"/></label>
+          </div>
+          
+          <h3 class="font-semibold mt-4 border-b border-slate-700 pb-2">Vos informations</h3>
+          
+          <div class="grid md:grid-cols-2 gap-4">
+              <label class="grid gap-1.5"><span class="font-semibold">Nom complet</span><input required name="name" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"/></label>
+              <label class="grid gap-1.5"><span class="font-semibold">Téléphone</span><input required name="phone" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"/></label>
+          </div>
+          <label class="grid gap-1.5"><span class="font-semibold">Email</span><input required type="email" name="email" class="px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-amber-400 focus:ring-1 outline-none transition"/></label>
+          
+          <div id="form-feedback" class="form-feedback"></div>
+
+          <div class="flex items-center justify-end mt-6">
+            <button type="submit" id="submit-button" class="w-full md:w-auto px-8 py-3 rounded-xl bg-amber-400 text-slate-900 font-bold hover:bg-amber-300 transition-all transform hover:scale-105">Réserver</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="mt-20 border-t border-slate-800/60 bg-slate-950/80">
+    <div class="max-w-7xl mx-auto px-4 py-12 text-center text-sm text-slate-500">
+        © 2025 Douala Drive. Tous droits réservés.
+    </div>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init({ duration: 700, once: true });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    let allCars = [];
+
+    // --- DOM Elements ---
+    const carSelectionGrid = document.getElementById('car-selection-grid');
+    const carPreview = document.getElementById('car-preview');
+    const carPreviewPlaceholder = document.getElementById('car-preview-placeholder');
+    const carImage = document.getElementById('car-image');
+    const carName = document.getElementById('car-name');
+    const carPrice = document.getElementById('car-price');
+    const selectedCarIdInput = document.getElementById('selectedCarId');
+    const formFeedback = document.getElementById('form-feedback');
+    const submitButton = document.getElementById('submit-button');
+    const bookingForm = document.getElementById('bookingForm');
+
+    // --- Functions ---
+    function updatePreview(selectedCar) {
+        if (!selectedCar) {
+            carPreview.classList.add('hidden');
+            carPreviewPlaceholder.classList.remove('hidden');
+            selectedCarIdInput.value = '';
+            return;
+        }
+        
+        carImage.src = `../${selectedCar.image}`;
+        carImage.alt = selectedCar.name;
+        carName.textContent = selectedCar.name;
+        carPrice.textContent = selectedCar.price;
+        selectedCarIdInput.value = selectedCar.id;
+
+        carPreviewPlaceholder.classList.add('hidden');
+        carPreview.classList.remove('hidden');
+    }
+
+    function renderCarSelection(cars) {
+        carSelectionGrid.innerHTML = '';
+        cars.forEach(car => {
+            const card = document.createElement('div');
+            card.className = 'car-selector-card bg-slate-800 rounded-lg p-3 flex flex-col items-center text-center';
+            card.dataset.carId = car.id;
+            card.innerHTML = `
+                <img src="../${car.image}" alt="${car.name}" class="w-full h-24 object-cover rounded-md mb-3">
+                <span class="font-semibold text-sm">${car.name}</span>
+            `;
+            
+            card.addEventListener('click', () => {
+                // Remove selected state from all other cards
+                carSelectionGrid.querySelectorAll('.car-selector-card').forEach(c => c.classList.remove('selected'));
+                // Add selected state to clicked card
+                card.classList.add('selected');
+                // Update the preview and hidden input
+                updatePreview(car);
+            });
+            carSelectionGrid.appendChild(card);
+        });
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        if (!selectedCarIdInput.value) {
+            formFeedback.className = 'form-feedback error';
+            formFeedback.textContent = 'Veuillez d\'abord sélectionner un véhicule.';
+            return;
+        }
+
+        formFeedback.className = 'form-feedback';
+        formFeedback.textContent = '';
+        submitButton.disabled = true;
+        submitButton.textContent = 'Vérification...';
+
+        const formData = new FormData(e.target);
+        const bookingData = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/api/booking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                formFeedback.className = 'form-feedback success';
+                formFeedback.textContent = result.message;
+                bookingForm.reset();
+                updatePreview(null); // Reset preview
+                carSelectionGrid.querySelectorAll('.car-selector-card').forEach(c => c.classList.remove('selected'));
+            } else {
+                formFeedback.className = 'form-feedback error';
+                formFeedback.textContent = result.message || 'Une erreur est survenue.';
+            }
+        } catch (error) {
+            formFeedback.className = 'form-feedback error';
+            formFeedback.textContent = 'Impossible de contacter le serveur. Veuillez réessayer plus tard.';
+        }
+
+        submitButton.disabled = false;
+        submitButton.textContent = 'Réserver';
+    }
+
+    // --- Initialization ---
+    async function initializePage() {
+        try {
+            const response = await fetch('/api/cars');
+            if (!response.ok) throw new Error('Failed to fetch cars');
+            allCars = await response.json();
+            
+            renderCarSelection(allCars);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const modelId = parseInt(urlParams.get('model_id'), 10);
+            if (modelId) {
+                const carToSelect = allCars.find(c => c.id === modelId);
+                if (carToSelect) {
+                    updatePreview(carToSelect);
+                    // Also highlight the card in the grid
+                    const cardToSelect = carSelectionGrid.querySelector(`[data-car-id="${modelId}"]`);
+                    if (cardToSelect) {
+                        cardToSelect.classList.add('selected');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Initialization failed:", error);
+            carSelectionGrid.innerHTML = `<p class="text-red-400">Erreur de chargement des modèles.</p>`;
+        }
+
+        bookingForm.addEventListener('submit', handleFormSubmit);
+    }
+
+    initializePage();
+  });
+</script>
+
+</body>
+</html>

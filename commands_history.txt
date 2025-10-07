@@ -1,0 +1,5 @@
+Liste des commandes exécutées :
+
+1. ipconfig
+2. netsh advfirewall firewall add rule name="Open Port 3000" dir=in action=allow protocol=TCP localport=3000
+3. node server.js (exécuté dans le dossier 'Downloads\DoualaLuxuryRent_PRO\backend')

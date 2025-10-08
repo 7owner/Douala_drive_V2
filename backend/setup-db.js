@@ -3,7 +3,7 @@ const mysql = require('mysql2/promise');
 // --- Données à migrer ---
 const carsData = [
     {
-      name: "JETOUR 1",
+      name: "JETOUR T1",
       category: "SUV / Crossovers",
       price: "120 000 FCFA/jour",
       image: "assets/voiture1.jpg",
@@ -106,7 +106,20 @@ const carsData = [
     }
 ];
 
-// --- Configuration de la base de données ---\nconst connectionString = process.env.DATABASE_URL || \'mysql://root:@localhost:3306/douala_rent\';\nconst isProduction = !!process.env.DATABASE_URL;\n\n// --- Logique du script ---\nasync function setupDatabase() {\n    let connection;\n    try {\n        // Pour la création initiale de la DB, on a besoin de se connecter sans spécifier de DB\n        const initialConnectionString = process.env.DATABASE_URL ? connectionString.substring(0, connectionString.lastIndexOf(\'/\')) : \'mysql://root:@localhost:3306\';\n        const dbName = connectionString.substring(connectionString.lastIndexOf(\'/\') + 1).split(\'?\')[0];\n\n        connection = await mysql.createConnection({\n            uri: initialConnectionString,\n            ssl: isProduction ? { rejectUnauthorized: false } : false\n        });\n\n        // 1. Créer la base de données si elle n\'existe pas\n        await connection.query(`CREATE DATABASE IF NOT EXISTS \\\`${dbName}\\\``);\n        console.log(`Database \'${dbName}\' created or already exists.`);\n\n        // Utiliser la nouvelle base de données\n        await connection.changeUser({ database: dbName });\n        console.log(`Switched to database \'${dbName}\'.`);
+// --- Configuration de la base de données ---\nconst connectionString = process.env.DATABASE_URL || 'mysql://root:@localhost:3306/douala_rent';
+const isProduction = !!process.env.DATABASE_URL;
+
+// --- Logique du script ---
+async function setupDatabase() {
+    let connection;
+    try {
+        // Connexion directe à la base de données
+        connection = await mysql.createConnection({
+            uri: connectionString,
+            ssl: isProduction ? { rejectUnauthorized: false } : false
+        });
+
+        console.log(`Connected to database.`);
 
         // 2. Créer la table 'cars'
         await connection.query(`DROP TABLE IF EXISTS cars;`);

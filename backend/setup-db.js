@@ -1,5 +1,10 @@
 const mysql = require('mysql2/promise');
 
+// --- DEBUGGING ---
+console.log("--- DATABASE DEBUG ---");
+console.log("DATABASE_URL variable received:", process.env.DATABASE_URL);
+console.log("----------------------");
+
 // --- Données à migrer ---
 const carsData = [
     {

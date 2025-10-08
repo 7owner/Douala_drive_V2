@@ -4,7 +4,7 @@ const path = require('path');
 const db = require('./db'); // Import our new database module
 
 const app = express();
-const port = 3000;
+const port = 10000;
 
 app.use(cors());
 app.use(express.json());

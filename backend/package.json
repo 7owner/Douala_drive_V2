@@ -4,6 +4,7 @@
   "description": "Backend for DoualaLuxuryRent",
   "main": "server.js",
   "scripts": {
+    "prestart": "node setup-db.js",
     "start": "node server.js"
   },
   "dependencies": {

@@ -106,7 +106,8 @@ const carsData = [
     }
 ];
 
-// --- Configuration de la base de données ---\nconst connectionString = process.env.DATABASE_URL || 'mysql://root:@localhost:3306/douala_rent';
+// --- Configuration de la base de données ---
+const connectionString = process.env.DATABASE_URL || 'mysql://root:@localhost:3306/douala_rent';
 const isProduction = !!process.env.DATABASE_URL;
 
 // --- Logique du script ---
@@ -118,10 +119,9 @@ async function setupDatabase() {
             uri: connectionString,
             ssl: isProduction ? { rejectUnauthorized: false } : false
         });
-
         console.log(`Connected to database.`);
 
-        // 2. Créer la table 'cars'
+        // Créer la table 'cars'
         await connection.query(`DROP TABLE IF EXISTS cars;`);
         await connection.query(`
             CREATE TABLE cars (
@@ -138,7 +138,8 @@ async function setupDatabase() {
         `);
         console.log("Table 'cars' created or recreated with quantity and tags column.");
 
-        // 3. Créer la table 'bookings'
+        // Créer la table 'bookings'
+        await connection.query(`DROP TABLE IF EXISTS bookings;`);
         await connection.query(`
             CREATE TABLE IF NOT EXISTS bookings (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -153,7 +154,7 @@ async function setupDatabase() {
         `);
         console.log("Table 'bookings' created or already exists.");
 
-        // 5. Créer la table 'comments'
+        // Créer la table 'comments'
         await connection.query(`DROP TABLE IF EXISTS comments;`);
         await connection.query(`
             CREATE TABLE comments (
@@ -168,10 +169,9 @@ async function setupDatabase() {
         `);
         console.log("Table 'comments' created.");
 
-        // 6. Insérer les données dans la table 'cars'
+        // Insérer les données dans la table 'cars'
         console.log("Inserting car data...");
         for (const car of carsData) {
-            // Assign some example tags based on car name/category
             let tags = [];
             if (car.category.includes("SUV")) tags.push("SUV");
             if (car.name.includes("JETOUR")) tags.push("High-Tech");
@@ -181,7 +181,6 @@ async function setupDatabase() {
             if (car.name.includes("X670")) tags.push("Luxe", "Affaires");
             if (car.name.includes("T1")) tags.push("Luxe", "High-Tech");
 
-
             const query = 'INSERT INTO cars (name, category, price, image, features, details, quantity, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
             const values = [
                 car.name,
@@ -190,14 +189,14 @@ async function setupDatabase() {
                 car.image,
                 JSON.stringify(car.features),
                 JSON.stringify(car.details),
-                car.quantity, // Use dynamic quantity
+                car.quantity,
                 JSON.stringify(tags)
             ];
             await connection.query(query, values);
         }
         console.log(`${carsData.length} cars inserted successfully.`);
 
-        // 7. Insérer les données de commentaires
+        // Insérer les données de commentaires
         console.log("Inserting comment data...");
         const [cars] = await connection.query('SELECT id, name FROM cars');
         const carIdMap = new Map(cars.map(car => [car.name, car.id]));
@@ -225,6 +224,8 @@ async function setupDatabase() {
 
     } catch (error) {
         console.error('An error occurred during database setup:', error);
+        // S'assurer que le processus échoue en cas d'erreur
+        process.exit(1);
     } finally {
         if (connection) {
             await connection.end();
